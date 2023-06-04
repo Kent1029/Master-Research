@@ -16,7 +16,7 @@ model = load_model("best_model.h5")
 
 face_haar_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-video_path ="074_825.mp4"
+video_path ="000_003.mp4"
 fps = 20  # 設定取樣率為25
 
 cap = cv2.VideoCapture(video_path)
