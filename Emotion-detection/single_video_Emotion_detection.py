@@ -13,17 +13,13 @@ import time
 # load model
 model = load_model("best_model.h5")
 
-
 face_haar_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
 video_path ="000_003.mp4"
-fps = 20  # 設定取樣率為25
 
 cap = cv2.VideoCapture(video_path)
-cap.set(cv2.CAP_PROP_FPS, fps)
 
-start_time = time.time()
-fframe_count = 0
+
 while True:
     
     ret, test_img = cap.read()  # captures frame and returns boolean value and captured image
@@ -55,26 +51,10 @@ while True:
 
     resized_img = cv2.resize(test_img, (1000, 700))
     cv2.imshow('Facial emotion analysis ', resized_img)
-    fframe_count += 1
+    cv2.waitKey(25)
 
-    if cv2.waitKey(int(1000 / 30)) == ord('q'):  # wait until 'q' key is pressed
-        break
- 
-
-print("fframe_count",fframe_count)
-
-end_time = time.time()
-elapsed_time = end_time - start_time
-ffps = fframe_count / elapsed_time
-print("平均預測幀率:", ffps)
-
-
-
-fps = cap.get(cv2.CAP_PROP_FPS) 
-print("幀率:", fps)
-frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-video_duration = frame_count / fps
-print("影片時間（秒）:", video_duration)
+    # if cv2.waitKey(0) == ord('q'):  # wait until 'q' key is pressed
+    #     break
 
 cap.release()
 cv2.destroyAllWindows

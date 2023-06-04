@@ -1,17 +1,3 @@
-# import os
-# import cv2
-
-# folder_path = 'E:\\Research\\dataset\\FaceForensics++\\manipulated_sequences\\Deepfakes\\c40\\videos'
-
-# for filename in os.listdir(folder_path):
-#     if filename.endswith('.mp4') or filename.endswith('.avi') or filename.endswith('.mov'):
-#         video_path = os.path.join(folder_path, filename)
-#         video = cv2.VideoCapture(video_path)
-#         fps = video.get(cv2.CAP_PROP_FPS)
-#         print(f"影片 {filename} 的FPS為: {fps}")
-
-#         video.release()
-
 import os
 import cv2
 
