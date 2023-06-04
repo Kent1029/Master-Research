@@ -1,0 +1,4 @@
+name: emotion_counter
+channels:
+  - defaults
+prefix: C:\ProgramData\Anaconda3\envs\emotion_counter

@@ -4,7 +4,7 @@ import numpy as np
 from keras.preprocessing import image
 import warnings
 warnings.filterwarnings("ignore")
-from keras.preprocessing.image import load_img, img_to_array 
+from tensorflow.keras.preprocessing.image import load_img, img_to_array 
 from keras.models import  load_model
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,8 +18,10 @@ face_haar_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_f
 
 cap = cv2.VideoCapture(0)
 
+
 while True:
     ret, test_img = cap.read()  # captures frame and returns boolean value and captured image
+    
     if not ret:
         continue
     gray_img = cv2.cvtColor(test_img, cv2.COLOR_BGR2RGB)
