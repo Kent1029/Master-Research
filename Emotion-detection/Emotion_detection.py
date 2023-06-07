@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # load model
-model = load_model("best_model.h5")
+model = load_model("emotion_model.h5")
 
 
 face_haar_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')

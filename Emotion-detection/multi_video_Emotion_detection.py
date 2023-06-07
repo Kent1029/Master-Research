@@ -1,17 +1,39 @@
+'''
+加入了signal配合try expect:處理Ctrl+C終止訊號
+'''
+
+
 import os
 import cv2
+import csv
+import time
+import signal
 import numpy as np
-from keras.preprocessing import image
+import pandas as pd
 import warnings
 warnings.filterwarnings("ignore")
-from tensorflow.keras.preprocessing.image import load_img, img_to_array 
-from keras.models import  load_model
+from tqdm import tqdm
 import matplotlib.pyplot as plt
-import numpy as np
-import time
+from keras.models import  load_model
+from keras.preprocessing import image
+from tensorflow.keras.preprocessing.image import load_img, img_to_array 
+
+# 定義一個訊號處理的函數
+def signal_handler(signal, frame):
+    print("程式終止")
+    # 在這裡執行釋放資源的清理工作
+    # 關閉文件、釋放資源
+    # 退出程式
+    csv_file.close()
+    sys.exit(0)
+
+# 創建一個訊號處理的函數
+signal.signal(signal.SIGINT, signal_handler)
 
 
 def detection(file_path):
+    # 創建一个空的dict来保存emotion counter
+    emotion_counts = {'angry': 0, 'disgust': 0, 'fear': 0, 'happy': 0, 'sad': 0, 'surprise': 0, 'neutral': 0}
     cap = cv2.VideoCapture(file_path)
     while True:
         
@@ -38,6 +60,7 @@ def detection(file_path):
 
             emotions = ('angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral')
             predicted_emotion = emotions[max_index]
+            emotion_counts[predicted_emotion] += 1
             # print(predicted_emotion)
 
             cv2.putText(test_img, predicted_emotion, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
@@ -48,6 +71,7 @@ def detection(file_path):
 
     cap.release()
     cv2.destroyAllWindows
+    return emotion_counts
 
 
 def get_filenames(folder_path, format):
@@ -58,21 +82,97 @@ def get_filenames(folder_path, format):
     return filenames
 
 
+def first_write():
+    pbar = tqdm(filenames, desc='Processing', unit='video', unit_scale=True)
+    try:
+        with open(csv_file_path, 'w', newline='') as csv_file:
+            writer = csv.writer(csv_file)
+            writer.writerow(['Video_name', 'happy', 'angry', 'sad', 'surprise', 'disgust', 'fear', 'neutral'])
+            for filename in pbar:
+                try:
+                    print(filename)
+                    file_path = os.path.join(folder_path, filename)
+                    emotion_counts=detection(file_path)
+                    
+                    print("情緒次數統計：",emotion_counts)
+                    # 將變數寫入 CSV 文件
+                    writer.writerow([filename, emotion_counts['happy'], emotion_counts['angry'], emotion_counts['sad'],
+                                    emotion_counts['surprise'], emotion_counts['disgust'], emotion_counts['fear'], emotion_counts['neutral']])
+                    csv_file.flush() #刷新文件的緩衝區，將資料存入csv 
+                except KeyboardInterrupt:
+                    #捕獲終止的訊號
+                    print("接收到中断信号，程式终止")
+                    pbar.close()  # 手動關閉tqdm的bar
+                    csv_file.close()  # 關閉文件
+                    sys.exit(0)
+    except KeyboardInterrupt:
+        print("接收到中断信号，程式终止")
+        sys.exit(0)
+
+
+def second_write():
+    pbar = tqdm(filenames[start_index:], desc='Processing', unit='video', unit_scale=True)
+    try:
+        with open(csv_file_path, 'a', newline='') as csv_file:
+            writer = csv.writer(csv_file)
+            for filename in pbar:
+                try:
+                    print(filename)
+                    file_path = os.path.join(folder_path, filename)
+                    emotion_counts=detection(file_path)
+                    
+                    print("情緒次數統計：",emotion_counts)
+                    # 將變數寫入 CSV 文件
+                    writer.writerow([filename, emotion_counts['happy'], emotion_counts['angry'], emotion_counts['sad'],
+                                    emotion_counts['surprise'], emotion_counts['disgust'], emotion_counts['fear'], emotion_counts['neutral']])
+                    csv_file.flush() #刷新文件的緩衝區，將資料存入csv 
+                except KeyboardInterrupt:
+                    #捕獲終止的訊號
+                    print("接收到中断信号，程式终止")
+                    pbar.close()  # 手動關閉tqdm的bar
+                    csv_file.close()  # 關閉文件
+                    sys.exit(0)
+    except KeyboardInterrupt:
+        print("接收到中断信号，程式终止")
+        sys.exit(0)
 
 # main
 
 # load model
-model = load_model("best_model.h5")
+model = load_model("emotion_model.h5")
 
 face_haar_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 # 指定資料夾path和檔案名稱format
-folder_path = 'E:\\Research\\dataset\\FaceForensics++\\manipulated_sequences\\Deepfakes\\c40\\videos'
+folder_path = 'E:\\Research\\Master-Research\\Emotion-detection\\video'
+
 format = '.mp4'
 
 # 調用function獲取滿足條件的filename
 filenames = get_filenames(folder_path, format)
 
-# 迭代檔案名稱列表，進行檢測
-for filename in filenames:
-    video_path = os.path.join(folder_path, filename)
-    detection(video_path)
+csv_file_path = 'emotion_counts.csv'
+
+# 檢查 CSV 文件是否存在
+if os.path.isfile(csv_file_path):
+    # 讀取 CSV 文件
+    df = pd.read_csv(csv_file_path, encoding='big5')
+    # 檢查 CSV 文件是否有資料
+    if not df.empty:
+        # 獲取最後一筆vide_name
+        last_filename = df['Video_name'].values[-1]
+
+        # 找到最后一笔数据在 filenames 列表中的索引位置
+        start_index = filenames.index(last_filename) + 1
+
+    else:
+        start_index = 0
+else:
+    start_index = 0
+
+# 判断是执行 first_write() 還是 second_write()
+if start_index == 0:
+    print("現在執行：first_write")
+    first_write()
+else:
+    print("現在執行：斷點續寫second_write")
+    second_write()
