@@ -37,7 +37,7 @@ for (x, y, w, h) in faces_detected:
     # find max indexed array
     max_index = np.argmax(predictions[0])
 
-    emotions = ('angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral')
+    emotions = ('happy','angry','sad','surprise', 'disgust', 'fear','neutral')
     predicted_emotion = emotions[max_index]
 
     cv2.putText(test_img, predicted_emotion, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)

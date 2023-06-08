@@ -43,7 +43,7 @@ while True:
         # find max indexed array
         max_index = np.argmax(predictions[0])
 
-        emotions = ('angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral')
+        emotions = ('happy','angry','sad','surprise', 'disgust', 'fear','neutral')
         predicted_emotion = emotions[max_index]
         # print(predicted_emotion)
 
