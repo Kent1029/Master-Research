@@ -17,6 +17,13 @@ import matplotlib.pyplot as plt
 from keras.models import  load_model
 from keras.preprocessing import image
 from tensorflow.keras.preprocessing.image import load_img, img_to_array 
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout, Flatten
+from tensorflow.keras.layers import Conv2D
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.layers import MaxPooling2D
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from keras.applications.imagenet_utils import preprocess_input
 
 # 定義一個訊號處理的函數
 def signal_handler(signal, frame):
@@ -32,45 +39,39 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 def detection(file_path):
-    # 創建一个空的dict来保存emotion counter
+    # 创建一个空的字典来保存情绪计数
     emotion_counts = {'happy': 0, 'angry': 0, 'sad': 0, 'surprise': 0, 'disgust': 0, 'fear': 0, 'neutral': 0}
     cap = cv2.VideoCapture(file_path)
     while True:
-        
-        ret, test_img = cap.read()  # captures frame and returns boolean value and captured image
-        
+        ret, test_img = cap.read()
         if not ret:
             break
-        gray_img = cv2.cvtColor(test_img, cv2.COLOR_BGR2RGB)
 
+        gray_img = cv2.cvtColor(test_img, cv2.COLOR_BGR2GRAY)
         faces_detected = face_haar_cascade.detectMultiScale(gray_img, 1.32, 5)
 
         for (x, y, w, h) in faces_detected:
             cv2.rectangle(test_img, (x, y), (x + w, y + h), (255, 0, 0), thickness=7)
-            roi_gray = gray_img[y:y + w, x:x + h]  # cropping region of interest i.e. face area from  image
-            roi_gray = cv2.resize(roi_gray, (224, 224))
-            img_pixels = img_to_array(roi_gray)
-            img_pixels = np.expand_dims(img_pixels, axis=0)
-            img_pixels /= 255
+            roi_gray = gray_img[y:y + h, x:x + w]
+            roi_gray = cv2.resize(roi_gray, (48, 48))
+            img_pixels = roi_gray.reshape((1, 48, 48, 1))
+            img_pixels = img_pixels.astype('float32')
+            img_pixels /= 255.0
 
-            predictions = model.predict(img_pixels, verbose=0)
-
-            # find max indexed array
+            predictions = model.predict(img_pixels)
             max_index = np.argmax(predictions[0])
-
-            emotions = ('happy','angry','sad','surprise', 'disgust', 'fear','neutral')
+            emotions = ('happy', 'angry', 'sad', 'surprise', 'disgust', 'fear', 'neutral')
             predicted_emotion = emotions[max_index]
             emotion_counts[predicted_emotion] += 1
-            # print(predicted_emotion)
 
             cv2.putText(test_img, predicted_emotion, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
         resized_img = cv2.resize(test_img, (1000, 700))
-        cv2.imshow('Facial emotion analysis ', resized_img)
+        cv2.imshow('Facial emotion analysis', resized_img)
         cv2.waitKey(1)
 
     cap.release()
-    cv2.destroyAllWindows
+    cv2.destroyAllWindows()
     return emotion_counts
 
 
@@ -138,8 +139,29 @@ def second_write():
 
 # main
 
+# Create the model
+model = Sequential()
+
+model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(48,48,1)))
+model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Flatten())
+model.add(Dense(1024, activation='relu'))
+model.add(Dropout(0.5))
+model.add(Dense(7, activation='softmax'))
+print("model",model)
+model.compile(loss='categorical_crossentropy',optimizer=Adam(lr=0.0001, decay=1e-6),metrics=['accuracy'])
 # load model
-model = load_model("emotion_model.h5")
+#model = load_model("emotion_model.h5")
+model.load_weights('model.h5')
 
 face_haar_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 # 指定資料夾path和檔案名稱format
