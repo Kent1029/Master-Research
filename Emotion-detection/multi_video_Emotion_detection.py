@@ -143,7 +143,7 @@ model = load_model("emotion_model.h5")
 
 face_haar_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 # 指定資料夾path和檔案名稱format
-folder_path = 'E:\\Research\\Master-Research\\Emotion-detection\\video'
+folder_path = 'E:\\Research\\dataset\\FaceForensics++\\manipulated_sequences\\Deepfakes\\c40\\videos'
 
 format = '.mp4'
 
