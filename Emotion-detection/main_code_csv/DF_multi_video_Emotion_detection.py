@@ -1,5 +1,10 @@
 '''
 加入了signal配合try expect:處理Ctrl+C終止訊號
+感謝https://github.com/atulapra/Emotion-detection.git
+https://github.com/atulapra/Emotion-detection/tree/master
+
+python file_name.py
+
 '''
 
 
