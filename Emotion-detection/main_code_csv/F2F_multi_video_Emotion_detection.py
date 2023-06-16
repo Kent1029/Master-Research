@@ -170,14 +170,14 @@ model.load_weights('model.h5')
 
 face_haar_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 # 指定資料夾path和檔案名稱format
-folder_path = 'E:\\Research\\dataset\\FaceForensics++\\manipulated_sequences\\Deepfakes\\c40\\videos'
+folder_path = 'E:\\Research\\dataset\\FaceForensics++\\manipulated_sequences\\Face2Face\\c40\\videos'
 
 format = '.mp4'
 
 # 調用function獲取滿足條件的filename
 filenames = get_filenames(folder_path, format)
 
-csv_file_path = 'DF_emotion_counts.csv'
+csv_file_path = 'F2F_emotion_counts.csv'
 
 # 檢查 CSV 文件是否存在
 if os.path.isfile(csv_file_path):

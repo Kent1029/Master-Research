@@ -19,8 +19,9 @@ import warnings
 warnings.filterwarnings("ignore")
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-from keras.models import  load_model
+#from keras.models import  load_model
 from keras.preprocessing import image
+from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import load_img, img_to_array 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, Flatten
@@ -72,8 +73,8 @@ def detection(file_path):
             cv2.putText(test_img, predicted_emotion, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
         resized_img = cv2.resize(test_img, (1000, 700))
-        #cv2.imshow('Facial emotion analysis', resized_img)
-        #cv2.waitKey(1)
+        cv2.imshow('Facial emotion analysis', resized_img)
+        cv2.waitKey(1)
 
     cap.release()
     cv2.destroyAllWindows()
@@ -170,14 +171,14 @@ model.load_weights('model.h5')
 
 face_haar_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 # 指定資料夾path和檔案名稱format
-folder_path = 'E:\\Research\\dataset\\FaceForensics++\\manipulated_sequences\\Deepfakes\\c40\\videos'
+folder_path = '/home/kent/dataset/FaceForensics++/original_sequences/youtube/c40/videos/'
 
 format = '.mp4'
 
 # 調用function獲取滿足條件的filename
 filenames = get_filenames(folder_path, format)
 
-csv_file_path = 'DF_emotion_counts.csv'
+csv_file_path = 'YT_emotion_counts.csv'
 
 # 檢查 CSV 文件是否存在
 if os.path.isfile(csv_file_path):
