@@ -170,7 +170,7 @@ model.load_weights('model.h5')
 
 face_haar_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 # 指定資料夾path和檔案名稱format
-folder_path = '/home/kent/dataset/FaceForensics++/manipulated_sequences/FaceShifter/c40/videos/'
+folder_path = '/home/kent/dataset/FaceForensics++/manipulated_sequences/FaceShifter/c23/videos/'
 
 format = '.mp4'
 

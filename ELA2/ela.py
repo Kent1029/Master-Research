@@ -4,7 +4,7 @@
 from PIL import ImageChops
 import PIL.Image
 import os
-
+import numpy as np
 # feature engineering - Error Level Analysis
 def ELA(img_path):
         DIR = "temp/"
@@ -21,5 +21,5 @@ def ELA(img_path):
         for x in range(WIDTH):
                 for y in range(HEIGHT):
                         d[x, y] = tuple(k * SCALE for k in d[x, y])
-
         diff.save(DIR+"ela_img.jpg")
+

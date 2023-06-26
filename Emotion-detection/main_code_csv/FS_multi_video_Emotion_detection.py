@@ -72,8 +72,8 @@ def detection(file_path):
             cv2.putText(test_img, predicted_emotion, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
         resized_img = cv2.resize(test_img, (1000, 700))
-        cv2.imshow('Facial emotion analysis', resized_img)
-        cv2.waitKey(1)
+        #cv2.imshow('Facial emotion analysis', resized_img)
+        #cv2.waitKey(1)
 
     cap.release()
     cv2.destroyAllWindows()
@@ -101,6 +101,7 @@ def first_write():
                     emotion_counts=detection(file_path)
                     
                     print("情緒次數統計：",emotion_counts)
+                    print("csv_file_path:",csv_file_path)
                     # 將變數寫入 CSV 文件
                     writer.writerow([filename, emotion_counts['happy'], emotion_counts['angry'], emotion_counts['sad'],
                                     emotion_counts['surprise'], emotion_counts['disgust'], emotion_counts['fear'], emotion_counts['neutral']])
@@ -170,7 +171,7 @@ model.load_weights('model.h5')
 
 face_haar_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 # 指定資料夾path和檔案名稱format
-folder_path = '/home/kent/dataset/FaceForensics++/manipulated_sequences/FaceSwap/c40/videos/'
+folder_path = 'E:\\Research\\dataset\\FaceForensics++\\manipulated_sequences\\FaceSwap\\c23\\videos'
 
 format = '.mp4'
 
