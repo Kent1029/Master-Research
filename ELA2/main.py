@@ -41,8 +41,8 @@ def infer(img_path, model, device):
     #np.savetxt("img_array.csv", img_array, delimiter=",")
     # 读取已有的csv数据
     existing_data = []
-    if os.path.isfile("img_array.csv"):
-        with open("img_array.csv", 'r') as file:
+    if os.path.isfile("c23_img_array.csv"):
+        with open("c23_img_array.csv", 'r') as file:
             reader = csv.reader(file)
             existing_data = list(reader)
 
@@ -53,7 +53,7 @@ def infer(img_path, model, device):
     existing_data.append(file_row)
 
     # 将所有数据写入csv文件
-    with open("img_array.csv", 'w', newline='') as file:
+    with open("c23_img_array.csv", 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(existing_data)
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
 
     req_args = parser.add_argument_group('Required Args')
     #req_args.add_argument('-p', '--path', type=str, metavar='img_path', dest='img_path', required=True, help='Image Path')
-    req_args.add_argument('-p', '--path', type=str, metavar='folder_path', dest='folder_path',default='E:\\Research\\dataset\\FaceForensics++\\original_sequences\\youtube\\c40', required=False, help='Folder Path')
+    req_args.add_argument('-p', '--path', type=str, metavar='folder_path', dest='folder_path',default='E:\\Research\\dataset\\FaceForensics++\\original_sequences\\youtube\\c23', required=False, help='Folder Path')
 
 
     args = parser.parse_args()

@@ -23,3 +23,11 @@ def ELA(img_path):
                         d[x, y] = tuple(k * SCALE for k in d[x, y])
         diff.save(DIR+"ela_img.jpg")
 
+
+def ELA(img_array):
+		original = PIL.Image.fromarray(img_array)
+		original.save(TEMP, quality=90)
+		temporary = PIL.Image.open(TEMP)
+		diff = ImageChops.difference(original, temporary)
+		diff_array = np.array(diff)
+		return diff_array
