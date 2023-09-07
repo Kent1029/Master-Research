@@ -23,3 +23,4 @@ def ELA(img_path):
                         d[x, y] = tuple(k * SCALE for k in d[x, y])
         diff.save(DIR+"ela_img.jpg")
 
+
