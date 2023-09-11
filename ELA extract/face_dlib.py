@@ -6,6 +6,7 @@ import glob
 import numpy as np
 from tqdm import tqdm
 import io
+from imutils import face_utils
 
 
 
@@ -79,77 +80,53 @@ def ELA(png_image_path):
         ela_image_path = "0_ela.jpg"
         ela_image.save(ela_image_path)
 
-        print("ELA圖像已保存到", ela_image_path)
-
-        
-def get_mask(img):
-    _, binary_b = cv2.threshold(img[:, :, 0], 0, 255, cv2.THRESH_BINARY)
-    _, binary_g = cv2.threshold(img[:, :, 1], 0, 255, cv2.THRESH_BINARY)
-    _, binary_r = cv2.threshold(img[:, :, 2], 0, 255, cv2.THRESH_BINARY)
-    mask = np.clip(binary_b + binary_g + binary_r, 0, 255)
-
-    res = np.zeros((mask.shape[0], mask.shape[1]), dtype=np.uint8)
-    contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    for c in range(len(contours)):
-        # 是否为凸包
-        ret = cv2.isContourConvex(contours[c])
-        # 凸包检测
-        points = cv2.convexHull(contours[c])
-
-        # 返回的points形状为(凸包边界点个数，1,2)
-        # 使用fillPoly函数应该把前两个维度对调
-        points = np.transpose(points, (1, 0, 2))
-        # print(points.shape)
-        # 描点然后用指定颜色填充点围成的图形内部，生成原始的mask
-        cv2.fillPoly(res, points, color=(255, 255, 255))
-
-    return np.expand_dims(res, axis=2)
+        # print("ELA圖像已保存到", ela_image_path)
+       
 
 
-def mask(ela_image):
-    
-    ret, binary_noise = cv2.threshold(ela_image, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    cv2.imshow("binary_noise",binary_noise)
+def get_landmark(frame):
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    faces = detector(frame, 1)
+    #landmarks = list()  # save the landmark
 
-    # 4: Binary Noise = MorphClose(Binary Noise, Cross)
-    cross_kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
-    binary_noise = cv2.morphologyEx(binary_noise, cv2.MORPH_CLOSE, cross_kernel)
 
-    # 5: Binary Noise = MorphClose(Binary Noise, Square)
-    square_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-    binary_noise = cv2.morphologyEx(binary_noise, cv2.MORPH_CLOSE, square_kernel)
+    landmark = predictor(frame, faces[0])
+    landmark = face_utils.shape_to_np(landmark)
+    #landmarks.append(landmark)
+    #print('landmark:::',landmark)
+    return landmark
 
-    # 6: Binary Noise = MorphOpen(Binary Noise)
-    binary_noise = cv2.morphologyEx(binary_noise, cv2.MORPH_OPEN, None)
 
-    # 7: Binary Noise = MorphClose(Binary Noise, Ellipse)
-    ellipse_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-    binary_noise = cv2.morphologyEx(binary_noise, cv2.MORPH_CLOSE, ellipse_kernel)
+def get_landmark_mask(srcRgb,landmark):
+    mask = np.zeros(srcRgb.shape, dtype=np.uint8)
 
-    # 8: Binary Noise = MorphErode(Binary Noise)
-    binary_noise = cv2.erode(binary_noise, None)
+    points = cv2.convexHull(
+        np.array(landmark).astype('float32')
+    )
+    corners = np.expand_dims(points, axis=0).astype(np.int32)
+    cv2.fillPoly(mask, corners, (255,)*3)
+    # gaussianblur.
+    blured = cv2.GaussianBlur(mask, (5, 5), 3).astype('float32')
+    threshold_value = 128  # 設定閾值
+    ret, binary_image = cv2.threshold(blured, threshold_value, 255, cv2.THRESH_BINARY)
 
-    # 9: Binary Noise = MorphDilate(Binary Noise)
-    binary_noise = cv2.dilate(binary_noise, None)
-
-    # 10: Binary Noise = GaussianBlur(Binary Noise)
-    binary_noise = cv2.GaussianBlur(binary_noise, (3, 3), 0)
-
-    # 11: M = Normalize(Binary Noise, alpha=0, beta=1)
-    normalized = cv2.normalize(binary_noise, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-    return normalized
+    #cv2.imshow("blured", binary_image)
+    return  binary_image
 
 def main():
     image=cv2.imread("frame_0.png")
     # 用dlib获取人脸
     face = get_dlib_face(image)
     crop_image=conservative_crop(image,face)
-    #cv2.imshow("crop_image",crop_image)
+    landmark=get_landmark(crop_image)
+    cv2.imshow("crop_image",crop_image)
     cv2.imwrite("crop_image.png",crop_image)
     ELA("crop_image.png")
     ela_image=cv2.imread("0_ela.jpg",0)
-    normalized=mask(ela_image)
-    cv2.imshow('Normalized', normalized)
+    #normalized=get_mask(ela_image)
+    #cv2.imshow("Landmark Mask", normalized)
+    blured=get_landmark_mask(ela_image,landmark)
+    cv2.imshow("blured", blured)
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
