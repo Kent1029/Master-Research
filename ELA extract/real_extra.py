@@ -4,6 +4,7 @@ import os
 import glob
 from tqdm import tqdm
 import cv2
+from element_wise import real_element_wise
 from real_face_dlib import get_dlib_face,conservative_crop,get_landmark,crop_region_face,get_region_face_landmark_mask,ELA
 
 # feature engineering - Error Level Analysis
@@ -44,6 +45,7 @@ def crop_ela_mask():
         crop_output_path=f'{output_directory}/face/'
         ela_output_path=f'{output_directory}/ela/'
         mask_output_path=f'{output_directory}/mask/'
+        element_wise_path=f'{output_directory}/element_wise/'
         # 搜索第二子資料夾中的所有image.png文件
         second_child_dirs = glob.glob(os.path.join(input_directory,  "*", "*.png"))
         print("path::",os.path.join(input_directory,  "*", "*.png"))
@@ -61,7 +63,8 @@ def crop_ela_mask():
             crop_image_path=crop_region_face(crop_image,crop_landmark,crop_output_path,counter)
     
             ela_image_path=ELA(crop_image_path,ela_output_path,counter)
-            get_region_face_landmark_mask(ela_image_path,mask_output_path,counter)
+            mask_image_path=get_region_face_landmark_mask(ela_image_path,mask_output_path,counter)
+            real_element_wise(crop_image_path,mask_image_path, element_wise_path,counter)
             counter += 1
 
 if __name__=='__main__':

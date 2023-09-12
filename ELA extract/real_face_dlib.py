@@ -177,7 +177,7 @@ def get_region_face_landmark_mask(ela_image_path,mask_output_path,counter):
     mask_image_path = os.path.join(mask_output_path, mask_image_filename)
     cv2.imwrite(mask_image_path,binary_noise)
 
-    #return binary_noise
+    return mask_image_path
 
 
 
