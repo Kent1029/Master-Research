@@ -2,7 +2,7 @@ import cv2
 import os
 
 
-def real_element_wise(crop_image_path,mask_image_path, element_wise_path,counter):
+def element_wise(crop_image_path,mask_image_path, element_wise_path,counter,type):
     # 開啟 JPEG 和 PNG 圖片
     face_image = cv2.imread(crop_image_path)
     mask_image = cv2.imread(mask_image_path)
@@ -14,7 +14,7 @@ def real_element_wise(crop_image_path,mask_image_path, element_wise_path,counter
     element_wise_image = cv2.add(face_image, mask_image)
 
 
-    element_wise_filename = f'real_element_wise_image{counter}.png'
+    element_wise_filename = f'{type}_element_wise_image{counter}.png'
     element_wise_image_path = os.path.join(element_wise_path, element_wise_filename)
     cv2.imwrite(element_wise_image_path,element_wise_image)
 
