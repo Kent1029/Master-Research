@@ -46,23 +46,12 @@ def main(args):
     elif args.dataset=="NeuralTextures":
         real_dataset=['original_NeuralTextures']
         fake_dataset=['NeuralTextures']
-    elif args.dataset=="Celeb_DF":
-        real_dataset=['Celeb_DF']
-        fake_dataset=['Celeb_DF']
-    elif args.dataset=="FFIW":
-        real_dataset=['FFIW']
-        fake_dataset=['FFIW']
 
     
     All_real_images = []
     ALL_real_labels=[]
     for data in real_dataset:
-        if args.dataset == "Celeb_DF":
-            real_data_dir = f'/home/kent/dataset/ELA_data/Celeb_DF/Celeb-real/test/element_wise/'
-        elif args.dataset == "FFIW":
-            real_data_dir = f'/home/kent/dataset/ELA_data/FFIW/FFIW_source/test/element_wise/'
-        else: 
-            real_data_dir = f'/home/kent/dataset/ELA_data/original_sequences/youtube/{data}/test/element_wise/'
+        real_data_dir = f'/home/kent/dataset/ELA_data/original_sequences/youtube/{data}/test/element_wise/'
         print("real_data_dir::",real_data_dir)
         real_images = load_images(real_data_dir)
         All_real_images.append(real_images)
@@ -70,16 +59,11 @@ def main(args):
         ALL_real_labels.extend(real_labels)
 
     #fake_dataset=['Deepfakes','Face2Face','FaceSwap','NeuralTextures']
-    #fake_dataset=['Deepfakes','Face2Face','FaceSwap','NeuralTextures','Celeb_DF']
+    fake_dataset=['Deepfakes','Face2Face','FaceSwap','NeuralTextures']
     All_fake_images = []
     ALL_fake_labels=[]
     for data in fake_dataset:
-        if args.dataset == "Celeb_DF":
-            fake_data_dir = f'/home/kent/dataset/ELA_data/Celeb_DF/Celeb-synthesis/test/element_wise/'
-        elif args.dataset == "FFIW":
-            fake_data_dir = f'/home/kent/dataset/ELA_data/FFIW/FFIW_target/test/element_wise/'
-        else: 
-            fake_data_dir = f'/home/kent/dataset/ELA_data/manipulated_sequences/{data}/test/element_wise/'
+        fake_data_dir = f'/home/kent/dataset/ELA_data/manipulated_sequences/{data}/test/element_wise/'
         print("fake_data_dir::",fake_data_dir)
         fake_images = load_images(fake_data_dir)
         All_fake_images.append(fake_images)
@@ -119,6 +103,8 @@ def main(args):
     # 定義數據轉換
     transform = transforms.Compose([
         transforms.ToTensor(),  # 將圖像轉換為PyTorch張量
+        transforms.Lambda(lambda x: x.repeat(3, 1, 1)),  # 將灰度轉為三通道
+        transforms.Resize((224, 224),antialias=True),  # 調整圖像大小以匹配EfficientNetV4的預訓練模型
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # 正規化圖像
     ])
 
@@ -130,7 +116,7 @@ def main(args):
 
     # 载入模型
     model = EfficientNet.from_pretrained('efficientnet-b4', num_classes=2)
-    model.load_state_dict(torch.load(f"/home/kent/{args.model}"))
+    model.load_state_dict(torch.load(f"/home/kent/Baseline_method/ELA_WISE/model_save/ELA_WISE_model_997.pth"))
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     #model = model.to(device)
     if args.gpu == 1:
@@ -176,8 +162,7 @@ def main(args):
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--dataset', type=str,choices=['all','Deepfakes','Face2Face','FaceSwap','NeuralTextures','Celeb_DF','FFIW'],default='all',help='指定dataset')
+    parser.add_argument('-d', '--dataset', type=str,choices=['all','Deepfakes','Face2Face','FaceSwap','NeuralTextures'],default='all',help='指定dataset')
     parser.add_argument('-g', '--gpu', type=int,default='1',help='多GPU')
-    parser.add_argument('-m', '--model', type=str,default='Baseline_method/ELA_WISE/adamw_model_save/ELA_WISE_model_984.pth',help='設定pre_trained_model')
     args = parser.parse_args()
     main(args)

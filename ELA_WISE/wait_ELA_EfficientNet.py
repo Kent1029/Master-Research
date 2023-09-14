@@ -12,7 +12,8 @@ import numpy as np
 from tqdm import tqdm
 import argparse
 from PIL import Image
-
+import ELA_WISE_model
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 def load_images(data_dir):
     images = []
@@ -86,7 +87,7 @@ def ELA_WISE(args):
         ALL_real_labels.extend(real_labels)
 
     #fake_dataset=['Deepfakes','Face2Face','FaceSwap','NeuralTextures']
-    #fake_dataset=['Deepfakes','Face2Face','FaceSwap','NeuralTextures']
+    fake_dataset=['Deepfakes','Face2Face','FaceSwap','NeuralTextures']
     All_fake_images = []
     ALL_fake_labels=[]
     for data in fake_dataset:
@@ -141,9 +142,9 @@ def ELA_WISE(args):
     
     # 創建數據加載器
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-
+    model = ELA_WISE_model.get(backbone='efficientnet-b4')
     # 定義EfficientNetV4模型
-    model = EfficientNet.from_pretrained('efficientnet-b4', num_classes=2)  # 2類別，真實和deepfake
+    #model = EfficientNet.from_pretrained('efficientnet-b4', num_classes=2)  # 2類別，真實和deepfake
     # 訓練模型
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     #print("Use device",device)
@@ -164,7 +165,7 @@ def ELA_WISE(args):
             # 定義損失函數和優化器
             criterion = nn.CrossEntropyLoss()
             #optimizer = optim.RMSprop(model.parameters(), lr=0.01, alpha=0.99)
-            optimizer = optim.AdamW(model.parameters(), lr=1e-3, weight_decay=4e-3)
+            optimizer = optim.Adam(model.parameters(), lr=0.001)
         else:
             model=model.to('cuda')
 
@@ -199,7 +200,7 @@ def ELA_WISE(args):
         # Save the model if it has a better AUC than the current best model
         if auc_train > best_auc:
             best_auc = auc_train
-            torch.save(model.state_dict(), f'{args.dataset}_adamw_model_save/ELA_WISE_model_{int(round(best_auc, 3)*1000)}.pth')
+            torch.save(model.state_dict(), f'./model_save/ELA_WISE_model_{int(round(best_auc, 3)*1000)}.pth')
 
 
 if __name__ == "__main__":
@@ -207,11 +208,7 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--dataset', type=str,choices=['all','Deepfakes','Face2Face','FaceSwap','NeuralTextures'],default='all',help='指定dataset')
     parser.add_argument('-e', '--epochs', type=int,default=100,help='輸入epochs數量')
     parser.add_argument('-g', '--gpu', type=int,default=1,help='選擇single or multi GPU')
-    parser.add_argument('-gg', '--ggpu', type=int,default=0,help='選擇哪一張 GPU')
     args = parser.parse_args()
-    os.makedirs(f'{args.dataset}_adamw_model_save', exist_ok=True)
-    if args.ggpu==0:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-    elif args.ggpu==1:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+    os.makedirs('model_save', exist_ok=True)
+
     ELA_WISE(args)
