@@ -109,4 +109,4 @@ if __name__=='__main__':
     #parser.add_argument('-t', '--type', type=str,default='real',help='選擇real or fake 影片')
     parser.add_argument('-j', '--json', type=str,default='train',help='選擇train or test.json')
     args = parser.parse_args()
-    crop_ela_mask(args)
+    crop_ela_mask(args) 

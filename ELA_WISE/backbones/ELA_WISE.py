@@ -29,6 +29,10 @@ class ELA_WISE(nn.Module):
             self.base_model = EfficientNet.from_pretrained(
                 'efficientnet-b4', out_size=[1, 3]
             )
+        elif backbone == 'efficientnet-b7':
+            self.base_model = EfficientNet.from_pretrained(
+            'efficientnet-b7', out_size=[1, 3]
+            )   
         else:
             raise ValueError("Unsupported Backbone!")
         

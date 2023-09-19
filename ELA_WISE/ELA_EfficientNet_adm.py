@@ -9,9 +9,10 @@ from sklearn.metrics import roc_auc_score
 import os
 import cv2
 import numpy as np
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import argparse
 from PIL import Image
+import model_net
 
 
 def load_images(data_dir):
@@ -143,7 +144,8 @@ def ELA_WISE(args):
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 
     # 定義EfficientNetV4模型
-    model = EfficientNet.from_pretrained('efficientnet-b4', num_classes=2)  # 2類別，真實和deepfake
+    #model = EfficientNet.from_pretrained('efficientnet-b4', num_classes=2)  # 2類別，真實和deepfake
+    model=model_net.get(backbone='efficientnet-b4')
     # 訓練模型
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     #print("Use device",device)
@@ -158,8 +160,8 @@ def ELA_WISE(args):
     else:
         if torch.cuda.device_count() > 1:
             print("Let's use", torch.cuda.device_count(), "GPUs!")
-            model = nn.DataParallel(model)
             model=model.to(device)
+            model = nn.DataParallel(model)
             # 定義損失函數和優化器
             criterion = nn.CrossEntropyLoss()
             #optimizer = optim.RMSprop(model.parameters(), lr=0.01, alpha=0.99)
@@ -179,7 +181,7 @@ def ELA_WISE(args):
         for batch in train_loader:
             inputs, labels = batch['image'].to(device), batch['label'].to(device)
             optimizer.zero_grad()
-            outputs = model(inputs)
+            locations, confidence,outputs = model(inputs)
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()

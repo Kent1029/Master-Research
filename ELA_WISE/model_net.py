@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import torch
-from model.backbones.ELA_WISE import ELA_WISE
+from backbones.ELA_WISE import ELA_WISE
 
 
 def get(pretrained_model=None, backbone='efficientnet-b4'):
@@ -12,7 +12,7 @@ def get(pretrained_model=None, backbone='efficientnet-b4'):
     :param use_cuda: True/False
     :return: model
     """
-    if backbone not in ['resnet34', 'efficientnet-b3', 'efficientnet-b4']:
+    if backbone not in ['resnet34', 'efficientnet-b3', 'efficientnet-b4','efficientnet-b7']:
         raise ValueError("Unsupported type of models!")
 
     model = ELA_WISE(2, backbone=backbone)
