@@ -91,7 +91,7 @@ def crop_ela_mask(args):
     # 遍歷資料夾
     for image_file in tqdm(fake_second_child_dirs, desc='Processing'):
         # 讀取PNG圖像
-        image=cv2.imread(image_file)    
+        image=cv2.imread(image_file)
         face = get_dlib_face(image)
         crop_image=conservative_crop(image,face)
         crop_landmark=get_landmark(crop_image)
