@@ -30,9 +30,9 @@ def load_labels(data_dir):
     for filename in os.listdir(data_dir):
         if filename.endswith(".png"):
             if filename.startswith("real_"):
-                labels.append(1)  # 真實圖像的標籤為1
+                labels.append(0)  # 真實圖像的標籤為0
             elif filename.startswith("fake_"):
-                labels.append(0)  # deepfake圖像的標籤為0
+                labels.append(1)  # deepfake圖像的標籤為1
     return labels
 
 
@@ -140,10 +140,10 @@ def ELA_WISE(args):
     train_dataset = ELA_WISE_Dataset(X_train, y_train, transform=transform)
     
     # 創建數據加載器
-    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
 
     # 定義EfficientNetV4模型
-    model = EfficientNet.from_pretrained('efficientnet-b4', num_classes=2)  # 2類別，真實和deepfake
+    model = EfficientNet.from_pretrained('efficientnet-b7', num_classes=2)  # 2類別，真實和deepfake
     # 訓練模型
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     #print("Use device",device)
@@ -198,13 +198,14 @@ def ELA_WISE(args):
         # Save the model if it has a better AUC than the current best model
         if auc_train > best_auc:
             best_auc = auc_train
-            torch.save(model.state_dict(), f'{args.dataset}_adamw_model_save/ELA_WISE_model_{int(round(best_auc, 3)*1000)}.pth')
+            torch.save(model.state_dict(), f'10_12_{args.dataset}_adamw_model_save/ELA_WISE_model_{int(round(best_auc, 3)*1000)}.pth')
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dataset', type=str,choices=['all','Deepfakes','Face2Face','FaceSwap','NeuralTextures'],default='all',help='指定dataset')
     parser.add_argument('-e', '--epochs', type=int,default=100,help='輸入epochs數量')
+    parser.add_argument('-bs', '--batch_size', type=int,default=32,help='輸入batch_size大小')
     parser.add_argument('-g', '--gpu', type=int,default=1,help='選擇single or multi GPU')
     parser.add_argument('-gg', '--ggpu', type=int,default=0,help='選擇哪一張 GPU')
     args = parser.parse_args()
@@ -213,4 +214,6 @@ if __name__ == "__main__":
         os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     elif args.ggpu==1:
         os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+    elif args.ggpu==2:
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
     ELA_WISE(args)

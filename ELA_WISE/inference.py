@@ -173,7 +173,6 @@ def main(args):
     print(f"AUC: {auc}")
 
 
-
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dataset', type=str,choices=['all','Deepfakes','Face2Face','FaceSwap','NeuralTextures','Celeb_DF','FFIW'],default='all',help='指定dataset')
