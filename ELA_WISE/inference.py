@@ -129,8 +129,18 @@ def main(args):
     test_loader = DataLoader(test_dataset, batch_size=32, shuffle=True)
 
     # 载入模型
-    model = EfficientNet.from_pretrained('efficientnet-b4', num_classes=2)
-    model.load_state_dict(torch.load(f"/home/kent/{args.model}"))
+    model = EfficientNet.from_pretrained('efficientnet-b7', num_classes=2)
+    #model.load_state_dict(torch.load(f"/home/kent/{args.model}"))
+    # 載入保存的state_dict
+    saved_state_dict = torch.load(f"/home/kent/{args.model}")
+
+    # 移除 "module." 前綴
+    new_state_dict = {k.replace("module.", ""): v for k, v in saved_state_dict.items()}
+
+    # 載入修正後的state_dict到模型中
+    model.load_state_dict(new_state_dict)
+
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     #model = model.to(device)
     if args.gpu == 1:
@@ -138,12 +148,10 @@ def main(args):
         print("Use One GPU",device,)
         
     else:
-        if torch.cuda.device_count() > 1:
+        if args.gpu > 1:
             print("Let's use", torch.cuda.device_count(), "GPUs!")
             model = nn.DataParallel(model)
-            model=model.to(device)
-        else:
-            model=model.to('cuda')
+        model=model.to(device)
 
 
     model.eval()
@@ -176,7 +184,7 @@ def main(args):
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dataset', type=str,choices=['all','Deepfakes','Face2Face','FaceSwap','NeuralTextures','Celeb_DF','FFIW'],default='all',help='指定dataset')
-    parser.add_argument('-g', '--gpu', type=int,default='1',help='多GPU')
-    parser.add_argument('-m', '--model', type=str,default='Baseline_method/ELA_WISE/adamw_model_save/ELA_WISE_model_984.pth',help='設定pre_trained_model')
+    parser.add_argument('-g', '--gpu', type=int,default='2',help='多GPU')
+    parser.add_argument('-m', '--model', type=str,default="Baseline_method/ELA_WISE/10_12_all_adamw_model_save/ELA_WISE_model_990.pth",help='設定pre_trained_model')
     args = parser.parse_args()
     main(args)
