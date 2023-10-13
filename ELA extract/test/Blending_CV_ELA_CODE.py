@@ -226,7 +226,8 @@ def get_blend_mask(mask):
 def dynamic_blend(source,target,mask):
 	mask_blured = get_blend_mask(mask)
 	#mask_blured = np.repeat(mask_blured[:, :, np.newaxis], 3, axis=2)
-	blend_list=[0.5]
+	blend_list=[0.25,0.5,0.75,1,1,1]
+	print("blend_list:",blend_list)
 	#blend_list=[0.25,0.5,0.75,1,1,1]
 	blend_ratio = blend_list[np.random.randint(len(blend_list))]
 	mask_blured*=blend_ratio
@@ -291,24 +292,25 @@ def ELA_WISE(image):
     mask_blured = mask_blured.astype(np.uint8)
     # 顯示圖片
     #cv2.imshow('ELA_image', ELA_image)
-    cv2.imshow('ELA_make_image', ELA_make_image)
-    cv2.imshow('element_wise_image', element_wise_image)
+    # cv2.imshow('ELA_make_image', ELA_make_image)
+    # cv2.imshow('element_wise_image', element_wise_image)
     cv2.imshow('target_transforms_image', target_transforms_image)
     cv2.imshow('blend_img', blend_img)
-    cv2.imshow('mask_blured', mask_blured)
+    # cv2.imshow('mask_blured', mask_blured)
 
     # 按下任意鍵則關閉所有視窗
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     
-    return blend_img
+    return blend_img,target_transforms_image
 
 if __name__=="__main__":
     # 讀取圖檔
-    img = cv2.imread('frame_0_119.png')
-    blend_img=ELA_WISE(img)
+    img = cv2.imread('frame_0.png')
+    blend_img,target_transforms_image=ELA_WISE(img)
     # 寫入圖檔
-    cv2.imwrite('frame_119_blend_img1.jpg', blend_img)
+    cv2.imwrite('0_25man_frame_blend_img1.jpg', blend_img)
+    cv2.imwrite('0_25man_target_transforms_image.jpg', target_transforms_image)
     # 顯示圖片
     # 按下任意鍵則關閉所有視窗
     cv2.waitKey(0)
