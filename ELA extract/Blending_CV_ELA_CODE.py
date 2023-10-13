@@ -305,10 +305,10 @@ def ELA_WISE(image):
 
 if __name__=="__main__":
     # 讀取圖檔
-    img = cv2.imread('frame_0.png')
+    img = cv2.imread('fake_frame_0.png')
     blend_img=ELA_WISE(img)
     # 寫入圖檔
-    cv2.imwrite('blend_img1.jpg', blend_img)
+    cv2.imwrite('fake_blend_img1.jpg', blend_img)
     # 顯示圖片
     # 按下任意鍵則關閉所有視窗
     cv2.waitKey(0)
