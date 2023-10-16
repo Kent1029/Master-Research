@@ -166,6 +166,9 @@ def get_region_face_landmark_mask(ELA_image):
     # 11: 歸一化
     binary_noise = cv2.normalize(binary_noise, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
     binary_noise = (binary_noise * 255).astype(np.uint8)
+    # 使用cv2.merge將binary_noise變為三通道
+    #binary_noise_3channels = cv2.merge([binary_noise, binary_noise, binary_noise])
+
 
     return binary_noise
 
@@ -205,68 +208,73 @@ def element_wise(ELA_image,ELA_make_image):
 
 
 def get_blend_mask(mask):
-	H,W=mask.shape
-	size_h=np.random.randint(192,257)
-	size_w=np.random.randint(192,257)
-	mask=cv2.resize(mask,(size_w,size_h))
-	kernel_1=random.randrange(5,26,2)
-	kernel_1=(kernel_1,kernel_1)
-	kernel_2=random.randrange(5,26,2)
-	kernel_2=(kernel_2,kernel_2)
-	
-	mask_blured = cv2.GaussianBlur(mask, kernel_1, 0)
-	mask_blured = mask_blured/(mask_blured.max())
-	mask_blured[mask_blured<1]=0
-	
-	mask_blured = cv2.GaussianBlur(mask_blured, kernel_2, np.random.randint(5,46))
-	mask_blured = mask_blured/(mask_blured.max())
-	mask_blured = cv2.resize(mask_blured,(W,H))
-	return mask_blured.reshape((mask_blured.shape+(1,)))
+    H,W=mask.shape
+    size_h=np.random.randint(192,257)
+    size_w=np.random.randint(192,257)
+    mask=cv2.resize(mask,(size_w,size_h))
+    kernel_1=random.randrange(5,26,2)
+    kernel_1=(kernel_1,kernel_1)
+    kernel_2=random.randrange(5,26,2)
+    kernel_2=(kernel_2,kernel_2)
+    
+    mask_blured = cv2.GaussianBlur(mask, kernel_1, 0)
+    mask_blured = mask_blured/(mask_blured.max())
+    mask_blured[mask_blured<1]=0
+    
+    mask_blured = cv2.GaussianBlur(mask_blured, kernel_2, np.random.randint(5,46))
+    mask_blured = mask_blured/(mask_blured.max())
+    mask_blured = cv2.resize(mask_blured,(W,H))
+    return mask_blured.reshape((mask_blured.shape+(1,)))
 
 def dynamic_blend(source,target,mask):
-	mask_blured = get_blend_mask(mask)
-	#mask_blured = np.repeat(mask_blured[:, :, np.newaxis], 3, axis=2)
-	blend_list=[0.25,0.5,0.75,1,1,1]
-	print("blend_list:",blend_list)
-	#blend_list=[0.25,0.5,0.75,1,1,1]
-	blend_ratio = blend_list[np.random.randint(len(blend_list))]
-	mask_blured*=blend_ratio
-	print("mask:",mask_blured.shape)
-	print("source:",source.shape)
-	print("target:",target.shape)
-	img_blended=(mask_blured * source + (1 - mask_blured) * target)
-	return img_blended,mask_blured
+    mask_blured = get_blend_mask(mask)
+    #mask_blured=mask
+    #mask_blured = np.repeat(mask_blured[:, :, np.newaxis], 3, axis=2)
+    blend_list=[0.25,0.5,0.75,1,1,1]
+    print("blend_list:",blend_list)
+    #blend_list=[0.25,0.5,0.75,1,1,1]
+    blend_ratio = blend_list[np.random.randint(len(blend_list))]
+    mask_blured*=blend_ratio
+    #mask_blured = (mask_blured * blend_ratio).astype(np.uint8)
+    #mask_blured=cv2.merge([mask_blured, mask_blured, mask_blured])
+    
+
+    print("mask:",mask_blured.shape)
+    print("source:",source.shape)
+    print("target:",target.shape)
+    img_blended=(mask_blured * source + (1 - mask_blured) * target)
+    return img_blended,mask_blured
 
 class RandomDownScale(alb.core.transforms_interface.ImageOnlyTransform):
-	def apply(self,img,**params):
-		return self.randomdownscale(img)
+    def apply(self,img,**params):
+        return self.randomdownscale(img)
 
-	def randomdownscale(self,img):
-		keep_ratio=True
-		keep_input_shape=True
-		H,W,C=img.shape
-		ratio_list=[2,4]
-		r=ratio_list[np.random.randint(len(ratio_list))]
-		img_ds=cv2.resize(img,(int(W/r),int(H/r)),interpolation=cv2.INTER_NEAREST)
-		if keep_input_shape:
-			img_ds=cv2.resize(img_ds,(W,H),interpolation=cv2.INTER_LINEAR)
+    def randomdownscale(self,img):
+        keep_ratio=True
+        keep_input_shape=True
+        H,W,C=img.shape
+        ratio_list=[2,4]
+        r=ratio_list[np.random.randint(len(ratio_list))]
+        img_ds=cv2.resize(img,(int(W/r),int(H/r)),interpolation=cv2.INTER_NEAREST)
+        if keep_input_shape:
+            img_ds=cv2.resize(img_ds,(W,H),interpolation=cv2.INTER_LINEAR)
 
-		return img_ds
+        return img_ds
 
 def get_source_transforms():
-		return alb.Compose([
-				alb.Compose([
-						alb.RGBShift((-20,20),(-20,20),(-20,20),p=0.3),
-						alb.HueSaturationValue(hue_shift_limit=(-0.3,0.3), sat_shift_limit=(-0.3,0.3), val_shift_limit=(-0.3,0.3), p=1),
-						alb.RandomBrightnessContrast(brightness_limit=(-0.1,0.1), contrast_limit=(-0.1,0.1), p=1),
-					],p=1),
-	
-				alb.OneOf([
-					RandomDownScale(p=1),
-					alb.Sharpen(alpha=(0.2, 0.5), lightness=(0.5, 1.0), p=1),
-				],p=1),
-				
-			], p=1.)
+        return alb.Compose([
+                alb.Compose([
+                        alb.RGBShift((-20,20),(-20,20),(-20,20),p=0.3),
+                        alb.HueSaturationValue(hue_shift_limit=(-0.3,0.3), sat_shift_limit=(-0.3,0.3), val_shift_limit=(-0.3,0.3), p=1),
+                        alb.RandomBrightnessContrast(brightness_limit=(-0.1,0.1), contrast_limit=(-0.1,0.1), p=1),
+                    ],p=1),
+
+                alb.OneOf([
+                    RandomDownScale(p=1),
+                    alb.Sharpen(alpha=(0.2, 0.5), lightness=(0.5, 1.0), p=1),
+                ],p=1),
+                
+            ], p=1.)
 
 def ELA_WISE(image): 
     face = get_dlib_face(image)
@@ -291,12 +299,12 @@ def ELA_WISE(image):
     blend_img = blend_img.astype(np.uint8)
     mask_blured = mask_blured.astype(np.uint8)
     # 顯示圖片
-    #cv2.imshow('ELA_image', ELA_image)
-    # cv2.imshow('ELA_make_image', ELA_make_image)
-    # cv2.imshow('element_wise_image', element_wise_image)
+    cv2.imshow('ELA_image', ELA_image)
+    cv2.imshow('ELA_make_image', ELA_make_image)
+    cv2.imshow('element_wise_image', element_wise_image)
     cv2.imshow('target_transforms_image', target_transforms_image)
     cv2.imshow('blend_img', blend_img)
-    # cv2.imshow('mask_blured', mask_blured)
+    cv2.imshow('mask_blured', mask_blured)
 
     # 按下任意鍵則關閉所有視窗
     cv2.waitKey(0)
@@ -309,8 +317,8 @@ if __name__=="__main__":
     img = cv2.imread('frame_0.png')
     blend_img,target_transforms_image=ELA_WISE(img)
     # 寫入圖檔
-    cv2.imwrite('0_25man_frame_blend_img1.jpg', blend_img)
-    cv2.imwrite('0_25man_target_transforms_image.jpg', target_transforms_image)
+    cv2.imwrite('tt0_25man_frame_blend_img1.jpg', blend_img)
+    cv2.imwrite('tt0_25man_target_transforms_image.jpg', target_transforms_image)
     # 顯示圖片
     # 按下任意鍵則關閉所有視窗
     cv2.waitKey(0)
