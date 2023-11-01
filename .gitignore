@@ -4,3 +4,4 @@
 *.npy
 *.jpeg
 __pycache__/
+test_video/

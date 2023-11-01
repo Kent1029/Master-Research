@@ -33,7 +33,7 @@ EMOTIONS = ('happy', 'angry', 'sad', 'surprise', 'disgust', 'fear', 'neutral')
 
 def args_func():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--dataset', type=str,choices=['YT','DF','F2F','FS','NT'],default='YT',help='指定dataset')
+    parser.add_argument('-d', '--dataset', type=str,choices=['YT','DF','F2F','FS','NT','test'],default='YT',help='指定dataset')
     args = parser.parse_args()
     return args
 
@@ -67,7 +67,10 @@ def create_model():
     model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=0.0001, decay=1e-6), metrics=['accuracy'])
     return model
 
+# 初始化 7x7 的矩陣
+transition_matrix = np.zeros((len(EMOTIONS), len(EMOTIONS)))
 def detection(file_path, model,face_haar_cascade):
+    global transition_matrix
     emotion_counts = {emotion: 0 for emotion in EMOTIONS}
     emotion_change = 0
     last_emotion = None
@@ -93,6 +96,9 @@ def detection(file_path, model,face_haar_cascade):
             emotions = ('happy', 'angry', 'sad', 'surprise', 'disgust', 'fear', 'neutral')
             predicted_emotion = emotions[max_index]
             if last_emotion is not None and last_emotion != predicted_emotion:
+                start_emotion_idx = EMOTIONS.index(last_emotion)
+                end_emotion_idx = EMOTIONS.index(predicted_emotion)
+                transition_matrix[start_emotion_idx, end_emotion_idx] += 1
                 emotion_change += 1
             last_emotion = predicted_emotion
             
@@ -106,9 +112,13 @@ def detection(file_path, model,face_haar_cascade):
 
     cap.release()
     cv2.destroyAllWindows()
-    return emotion_counts,emotion_change
+    return emotion_counts,emotion_change,transition_matrix 
 
-def write_to_csv(filenames, start_index, model,face_haar_cascade):
+# 全局次數矩陣
+global_transition_matrix = np.zeros((len(EMOTIONS), len(EMOTIONS)), dtype=np.float64)
+
+def write_to_csv(args,filenames, start_index, model,face_haar_cascade):
+    global global_transition_matrix
     with tqdm(filenames[start_index:], desc='Processing', unit='video', unit_scale=True) as pbar:
         with open(CSV_FILE_PATH, 'a' if start_index else 'w', newline='') as csv_file:
             writer = csv.writer(csv_file)
@@ -116,13 +126,43 @@ def write_to_csv(filenames, start_index, model,face_haar_cascade):
                 writer.writerow(['Video_name', *EMOTIONS, 'emotion_change'])
             for filename in pbar:
                 try:
-                    emotion_counts, emotion_changes = detection(os.path.join(FOLDER_PATH, filename), model, face_haar_cascade)
+                    emotion_counts, emotion_changes,transition_matrix  = detection(os.path.join(FOLDER_PATH, filename), model, face_haar_cascade)
+                    # 更新全局次數矩陣
+                    global_transition_matrix += transition_matrix
+                    # 計算個別影片的轉換機率矩陣
+                    row_sums = transition_matrix.sum(axis=1, keepdims=True)
+                    row_sums[row_sums == 0] = 1  # 避免除以零
+                    transition_prob_matrix = transition_matrix / row_sums
+                    # 為每個影片生成唯一的文件名
+                    transition_matrix_file = f"local_matrix/{args.dataset}_matrix/matrix_{filename.split('.')[0]}.csv"
+                    transition_prob_matrix_file = f"local_matrix/{args.dataset}_matrix/prob_matrix_{filename.split('.')[0]}.csv"
+                    # # 儲存矩陣
+                    # np.savetxt(transition_matrix_file, transition_matrix, delimiter=",", fmt="%d")
+                    # np.savetxt(transition_prob_matrix_file, transition_prob_matrix, delimiter=",", fmt="%.4f")
+                    # 創建 DataFrame 並儲存矩陣
+                    df_transition_matrix = pd.DataFrame(transition_matrix, index=EMOTIONS, columns=EMOTIONS)
+                    df_transition_matrix.to_csv(transition_matrix_file, index=True)
+                    df_transition_prob_matrix = pd.DataFrame(transition_prob_matrix, index=EMOTIONS, columns=EMOTIONS)
+                    df_transition_prob_matrix.to_csv(transition_prob_matrix_file, index=True)
                     print(emotion_counts,"emotion_changes:" ,emotion_changes)
                     writer.writerow([filename, *[emotion_counts[emotion] for emotion in EMOTIONS], emotion_changes])
                     csv_file.flush()
                 except KeyboardInterrupt:
                     print("接收到中断信号，程式终止")
                     return
+                
+    # 程序結束後，儲存全局次數矩陣和轉換機率矩陣
+    row_sums_global = global_transition_matrix.sum(axis=1, keepdims=True)
+    row_sums_global[row_sums_global == 0] = 1  # 避免除以零
+    global_transition_prob_matrix = global_transition_matrix / row_sums_global
+    
+    # np.savetxt(f"global_matrix/{args.dataset}_global_transition_matrix.csv", global_transition_matrix, delimiter=",", fmt="%d")
+    # np.savetxt(f"global_matrix/{args.dataset}_global_transition_prob_matrix.csv", global_transition_prob_matrix, delimiter=",", fmt="%.4f")
+    # 創建一個 DataFrame
+    df_global_transition_matrix = pd.DataFrame(global_transition_matrix, index=EMOTIONS, columns=EMOTIONS)
+    df_global_transition_matrix.to_csv(f"global_matrix/{args.dataset}/{args.dataset}_global_matrix.csv")
+    df_global_transition_prob_matrix = pd.DataFrame(global_transition_prob_matrix, index=EMOTIONS, columns=EMOTIONS)
+    df_global_transition_prob_matrix.to_csv(f"global_matrix/{args.dataset}/{args.dataset}_global_prob_matrix.csv")
 
 def get_filenames(folder_path, file_format):
     return [filename for filename in os.listdir(folder_path) if filename.endswith(file_format)]
@@ -131,20 +171,31 @@ if __name__ == '__main__':
     args = args_func()
     if args.dataset == 'YT':
         FOLDER_PATH ='E:\\Research\\dataset\\FaceForensics++\\original_sequences\\youtube\\c23\\videos'
-        CSV_FILE_PATH = 'YT_emotion_change_counts.csv'
+        CSV_FILE_PATH = 'csv_file/YT_emotion_change_counts.csv'
     elif args.dataset == 'DF':
         FOLDER_PATH ='E:\\Research\\dataset\\FaceForensics++\\manipulated_sequences\\Deepfakes\\c23\\videos'
-        CSV_FILE_PATH = 'DF_emotion_change_counts.csv'
+        CSV_FILE_PATH = 'csv_file/DF_emotion_change_counts.csv'
     elif args.dataset == 'F2F':
         FOLDER_PATH ='E:\\Research\\dataset\\FaceForensics++\\manipulated_sequences\\Face2Face\\c23\\videos'
-        CSV_FILE_PATH = 'F2F_emotion_change_counts.csv'
+        CSV_FILE_PATH = 'csv_file/F2F_emotion_change_counts.csv'
     elif args.dataset == 'FS':
         FOLDER_PATH ='E:\\Research\\dataset\\FaceForensics++\\manipulated_sequences\\FaceSwap\\c23\\videos'
         CSV_FILE_PATH = 'FS_emotion_change_counts.csv'
     elif args.dataset == 'NT':
         FOLDER_PATH ='E:\\Research\\dataset\\FaceForensics++\\manipulated_sequences\\NeuralTextures\\c23\\videos'
-        CSV_FILE_PATH = 'NT_emotion_change_counts.csv'
+        CSV_FILE_PATH = 'csv_file/NT_emotion_change_counts.csv'
+    elif args.dataset == 'test':
+        FOLDER_PATH ='E:\\Research\\Master-Research\\Emotion-detection\\main_code_csv\\test_video'
+        CSV_FILE_PATH = 'csv_file/test_emotion_change_counts.csv'
 
+    if not os.path.exists(f"global_matrix/{args.dataset}"):
+        os.makedirs(f"global_matrix/{args.dataset}")
+    if not os.path.exists(f"local_matrix/{args.dataset}_matrix"):
+        os.makedirs(f"local_matrix/{args.dataset}_matrix")
+    if not os.path.exists(f"csv_file"):
+        os.makedirs(f"csv_file")
+
+    
 
     model = create_model()
     model.load_weights('model.h5')
@@ -162,9 +213,9 @@ if __name__ == '__main__':
         print("FOLDER_PATH::",FOLDER_PATH)
         print("現在執行：first_write")
         start_index=0
-        write_to_csv(filenames, start_index,model,face_haar_cascade)
+        write_to_csv(args,filenames, start_index,model,face_haar_cascade)
     else:
         print("FOLDER_PATH::",FOLDER_PATH)
         print("現在執行：斷點續寫second_write")
-        write_to_csv(filenames, start_index,model,face_haar_cascade)
+        write_to_csv(args,filenames, start_index,model,face_haar_cascade)
     
