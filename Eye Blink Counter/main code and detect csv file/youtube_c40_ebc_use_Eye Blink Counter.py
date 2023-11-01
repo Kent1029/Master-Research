@@ -145,13 +145,13 @@ def second_write():
 
 
 # 指定資料夾path和檔案名稱format
-folder_path = 'E:\\Research\\dataset\\FaceForensics++\\original_sequences\\youtube\\c40\\videos'
+folder_path = 'E:\\Research\\dataset\\FaceForensics++\\original_sequences\\youtube\\c23\\videos'
 format = '.mp4'
 
 # 調用function獲取滿足條件的filename
 filenames = get_filenames(folder_path, format)
 
-csv_file_path = 'youtube_c40_Eyes_Blink_Counter.csv'
+csv_file_path = 'ttttest_youtube_c40_Eyes_Blink_Counter.csv'
 
 #此if-loop是為了second_write()做的檢查
 # 檢查 CSV 檔是否存在
