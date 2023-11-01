@@ -99,7 +99,10 @@ def detection(file_path, cap):
     
     time_diffs = [blink_timestamps[i] - blink_timestamps[i-1] for i in range(1, len(blink_timestamps))]#計算平均眨眼秒數
     avg_time_diff = sum(time_diffs) / len(time_diffs) if len(time_diffs) > 0 else 0 #計算平均眨眼秒數
-    blinks_per_minute = sum(blinks_every_5sec) / (len(blinks_every_5sec))
+    if len(blinks_every_5sec)>0:
+        blinks_per_minute = sum(blinks_every_5sec) / (len(blinks_every_5sec))
+    elif len(blinks_every_5sec)==0:
+        blinks_per_minute = 0
     cap.release()
     cv2.destroyAllWindows()
     return blinkCounter, avg_time_diff,blinks_per_minute
