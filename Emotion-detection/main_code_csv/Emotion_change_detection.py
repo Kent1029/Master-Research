@@ -99,6 +99,7 @@ def detection(file_path, model,face_haar_cascade):
                 start_emotion_idx = EMOTIONS.index(last_emotion)
                 end_emotion_idx = EMOTIONS.index(predicted_emotion)
                 transition_matrix[start_emotion_idx, end_emotion_idx] += 1
+                #transition_matrix[end_emotion_idx, start_emotion_idx] += 1
                 emotion_change += 1
             last_emotion = predicted_emotion
             
@@ -180,7 +181,7 @@ if __name__ == '__main__':
         CSV_FILE_PATH = 'csv_file/F2F_emotion_change_counts.csv'
     elif args.dataset == 'FS':
         FOLDER_PATH ='E:\\Research\\dataset\\FaceForensics++\\manipulated_sequences\\FaceSwap\\c23\\videos'
-        CSV_FILE_PATH = 'FS_emotion_change_counts.csv'
+        CSV_FILE_PATH = 'csv_file/FS_emotion_change_counts.csv'
     elif args.dataset == 'NT':
         FOLDER_PATH ='E:\\Research\\dataset\\FaceForensics++\\manipulated_sequences\\NeuralTextures\\c23\\videos'
         CSV_FILE_PATH = 'csv_file/NT_emotion_change_counts.csv'

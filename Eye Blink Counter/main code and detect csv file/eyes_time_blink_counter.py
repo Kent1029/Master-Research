@@ -12,7 +12,7 @@ import argparse
 
 def args_func():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--dataset', type=str,choices=['YT','DF','F2F','FS','NT'],default='YT',help='指定dataset')
+    parser.add_argument('-d', '--dataset', type=str,choices=['YT','DF','F2F','FS','NT','test'],default='YT',help='指定dataset')
     args = parser.parse_args()
     return args
 
@@ -105,7 +105,21 @@ def detection(file_path, cap):
         blinks_per_minute = 0
     cap.release()
     cv2.destroyAllWindows()
-    return blinkCounter, avg_time_diff,blinks_per_minute
+    try:
+        value_0 = blinks_every_5sec[0]
+    except IndexError:
+        value_0 = 0
+
+    try:
+        value_1 = blinks_every_5sec[1]
+    except IndexError:
+        value_1 = 0
+
+    try:
+        value_2 = blinks_every_5sec[2]
+    except IndexError:
+        value_2 = 0
+    return blinkCounter, avg_time_diff,value_0, value_1, value_2,blinks_per_minute
 
 cap = None
 def get_video_duration(file_path):
@@ -126,16 +140,16 @@ def write_to_csv(filenames, folder_path, csv_file_path, start_index):
     with open(csv_file_path, mode, newline='') as csv_file:
         writer = csv.writer(csv_file)
         if mode == 'w':
-            writer.writerow(['Video_ID','Video_Time', 'Blink_count', 'Ave_count',"Avg Time varibale(5sec)"])
+            writer.writerow(['Video_ID','Video_Time', 'Blink_count', 'Ave_count',"1st(5 sec)","2st(5 sec)","3st(5 sec)","Avg Time varibale(5 sec)"])##
         
         for filename in tqdm(filenames[start_index:], desc='Processing'):
             file_path = os.path.join(folder_path, filename)
             cap = cv2.VideoCapture(file_path)
-            blinkCounter, avg_time_diff,blinks_per_minute = detection(file_path, cap)
+            blinkCounter, avg_time_diff,sec1,sec2,sec3,blinks_per_minute = detection(file_path, cap)
             seconds = get_video_duration(file_path)
             cap.release()
             print('Video_Time：', seconds,"Avg_count：", avg_time_diff,"Blink_count：", blinkCounter,"Avg Time varibale(5sec)",blinks_per_minute)
-            writer.writerow([filename, seconds, blinkCounter, avg_time_diff,blinks_per_minute])
+            writer.writerow([filename, seconds, blinkCounter, avg_time_diff,sec1,sec2,sec3,blinks_per_minute])##
 
 def main(args,folder_paths,csv_file_paths):
     folder_path = folder_paths
@@ -168,17 +182,25 @@ if __name__ == '__main__':
     args = args_func()
     if args.dataset == 'YT':
         folder_paths ='E:\\Research\\dataset\\FaceForensics++\\original_sequences\\youtube\\c23\\videos'
-        csv_file_paths = 'YT_time_Eyes_Blink_Counter.csv'
+        csv_file_paths = 'csv_file/YT_time_Eyes_Blink_Counter.csv'
     elif args.dataset == 'DF':
         folder_paths ='E:\\Research\\dataset\\FaceForensics++\\manipulated_sequences\\Deepfakes\\c23\\videos'
-        csv_file_paths = 'DF_time_Eyes_Blink_Counter.csv'
+        csv_file_paths = 'csv_file/DF_time_Eyes_Blink_Counter.csv'
     elif args.dataset == 'F2F':
         folder_paths ='E:\\Research\\dataset\\FaceForensics++\\manipulated_sequences\\Face2Face\\c23\\videos'
-        csv_file_paths = 'F2F_time_Eyes_Blink_Counter.csv'
+        csv_file_paths = 'csv_file/F2F_time_Eyes_Blink_Counter.csv'
     elif args.dataset == 'FS':
         folder_paths ='E:\\Research\\dataset\\FaceForensics++\\manipulated_sequences\\FaceSwap\\c23\\videos'
-        csv_file_paths = 'FS_time_Eyes_Blink_Counter.csv'
+        csv_file_paths = 'csv_file/FS_time_Eyes_Blink_Counter.csv'
     elif args.dataset == 'NT':
         folder_paths ='E:\\Research\\dataset\\FaceForensics++\\manipulated_sequences\\NeuralTextures\\c23\\videos'
-        csv_file_paths = 'NT_time_Eyes_Blink_Counter.csv'
+        csv_file_paths = 'csv_file/NT_time_Eyes_Blink_Counter.csv'
+    elif args.dataset == 'test':
+        folder_paths ='E:\\Research\\Master-Research\\Emotion-detection\\main_code_csv\\test_video'
+        csv_file_paths = 'csv_file/test_time_Eyes_Blink_Counter.csv'
+
+
+    if not os.path.exists(f"csv_file"):
+        os.makedirs(f"csv_file")
+
     main(args,folder_paths,csv_file_paths)
