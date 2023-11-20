@@ -33,7 +33,7 @@ EMOTIONS = ('happy', 'angry', 'sad', 'surprise', 'disgust', 'fear', 'neutral')
 
 def args_func():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--dataset', type=str,choices=['YT','DF','F2F','FS','NT','test'],default='YT',help='指定dataset')
+    parser.add_argument('-d', '--dataset', type=str,choices=['YT','DF','F2F','FS','NT','Celeb_real','Celeb_fake',"FFIW_real","FFIW_fake",'test'],default='YT',help='指定dataset')
     args = parser.parse_args()
     return args
 
@@ -185,6 +185,18 @@ if __name__ == '__main__':
     elif args.dataset == 'NT':
         FOLDER_PATH ='E:\\Research\\dataset\\FaceForensics++\\manipulated_sequences\\NeuralTextures\\c23\\videos'
         CSV_FILE_PATH = 'csv_file/NT_emotion_change_counts.csv'
+    elif args.dataset == 'FFIW_real':
+        FOLDER_PATH ='E:\\Research\\dataset\\FFIW\\FFIW10K-v1-release-test\\source\\test'
+        CSV_FILE_PATH = 'csv_file/FFIW_real_emotion_change_counts.csv'
+    elif args.dataset == 'FFIW_fake':
+        FOLDER_PATH ='E:\\Research\\dataset\\FFIW\\FFIW10K-v1-release-test\\target\\test'
+        CSV_FILE_PATH = 'csv_file/FFIW_fake_emotion_change_counts.csv'
+    elif args.dataset == 'Celeb_real':
+        FOLDER_PATH ='E:\\Research\\dataset\\Celeb-DF-v2\\Celeb-real\\videos'
+        CSV_FILE_PATH = 'csv_file/Celeb_real_emotion_change_counts.csv'
+    elif args.dataset == 'Celeb_fake':
+        FOLDER_PATH ='E:\\Research\\dataset\\Celeb-DF-v2\\Celeb-synthesis\\videos'
+        CSV_FILE_PATH = 'csv_file/Celeb_fake_emotion_change_counts.csv'
     elif args.dataset == 'test':
         FOLDER_PATH ='E:\\Research\\Master-Research\\Emotion-detection\\main_code_csv\\test_video'
         CSV_FILE_PATH = 'csv_file/test_emotion_change_counts.csv'
